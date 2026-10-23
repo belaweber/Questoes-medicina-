@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plantão da Coluna</title>
+<style>
+:root{
+  --bg:#EDF1F3; --card:#FFFFFF; --ink:#12263A; --mut:#5B6B79; --line:#D3DCE2;
+  --acc:#0F7C8C; --acc-ink:#FFFFFF; --ok:#2B8A57; --okbg:#DDF1E5; --bad:#C8403F; --badbg:#F8E0DF; --bone:#E9E2D0; --bone-d:#CFC6AE;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1A24; --card:#16273A; --ink:#E6EEF3; --mut:#93A5B4; --line:#27405A;
+    --acc:#3FB6C6; --acc-ink:#07222A; --ok:#5CC48A; --okbg:#173B2B; --bad:#EE7573; --badbg:#431F20; --bone:#D9D1BC; --bone-d:#8E866F;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1A24; --card:#16273A; --ink:#E6EEF3; --mut:#93A5B4; --line:#27405A;
+  --acc:#3FB6C6; --acc-ink:#07222A; --ok:#5CC48A; --okbg:#173B2B; --bad:#EE7573; --badbg:#431F20; --bone:#D9D1BC; --bone-d:#8E866F;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
+#app{max-width:560px;margin:0 auto;padding:18px 16px 40px}
+h1,h2,h3{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;margin:0;font-weight:700;letter-spacing:-.01em}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.hero{display:flex;gap:14px;align-items:stretch;margin-bottom:18px}
+.spine{flex:0 0 96px}
+.hero h1{font-size:30px;line-height:1.05}
+.hero p{color:var(--mut);margin:6px 0 0;font-size:14px}
+.lvl{margin-top:12px;font-size:14px}
+.lvl b{font-family:Georgia,serif;font-size:17px}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:6px;transition:width .4s}
+.modes{display:grid;gap:10px}
+.mode{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px}
+.mode:active{transform:scale(.99)}
+.mode .ic{font-size:26px;width:40px;text-align:center}
+.mode b{display:block;font-family:Georgia,serif;font-size:17px}
+.mode span{color:var(--mut);font-size:13px;line-height:1.3;display:block}
+.mode.rev{border-style:dashed}
+.mode small{margin-left:auto;background:var(--bad);color:#fff;border-radius:20px;padding:1px 9px;font-size:13px;font-weight:700}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.back{background:none;border:1px solid var(--line);border-radius:10px;padding:5px 11px;color:var(--mut)}
+.top .bar{flex:1;margin:0}
+.streak{font-size:13px;color:var(--mut);white-space:nowrap}
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.tag{display:inline-block;font-size:12px;color:var(--acc);border:1px solid var(--acc);border-radius:20px;padding:0 9px;margin-bottom:8px}
+.vig{font-size:15.5px;margin:0 0 10px}
+.q{font-family:Georgia,serif;font-size:19px;font-weight:700;line-height:1.3;margin:0 0 4px}
+.tri .q{font-size:22px}
+.opts{display:grid;gap:9px;margin-top:14px}
+.opt{text-align:left;background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;font-size:15px;line-height:1.35}
+.opt:active{transform:scale(.99)}
+.opt.ok{background:var(--okbg);border-color:var(--ok)}
+.opt.bad{background:var(--badbg);border-color:var(--bad)}
+.opt[disabled]{cursor:default}
+.opts.row{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.opts.row .opt{text-align:center;font-weight:600}
+.fb{margin-top:14px;border-radius:12px;padding:12px 13px;font-size:14.5px}
+.fb.ok{background:var(--okbg)} .fb.bad{background:var(--badbg)}
+.fb b{display:block;font-family:Georgia,serif;font-size:17px;margin-bottom:3px}
+.cta{display:block;width:100%;margin-top:12px;background:var(--acc);color:var(--acc-ink);border:0;border-radius:12px;padding:13px;font-weight:700}
+.cta.alt{background:none;color:var(--ink);border:1px solid var(--line)}
+.timer{height:5px;background:var(--line);border-radius:4px;margin:0 0 12px;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--bad);width:100%}
+.end{text-align:center}
+.end h2{font-size:26px;margin:6px 0}
+.stars{font-size:34px;letter-spacing:4px}
+.big{font-family:Georgia,serif;font-size:44px;font-weight:700;color:var(--acc)}
+.chips{display:grid;gap:9px;margin-top:12px}
+.chip{display:flex;align-items:center;gap:10px;text-align:left;background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:11px 13px}
+.chip .n{flex:0 0 26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:13px;font-weight:700}
+.chip.p{background:var(--card);border-color:var(--acc)}
+.chip.p .n{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.res{display:grid;gap:8px;margin-top:12px}
+.rr{display:grid;grid-template-columns:22px 1fr 54px;gap:8px;align-items:center;font-size:14px}
+.rr .t{position:relative;background:var(--line);border-radius:6px;height:26px;overflow:hidden}
+.rr .t i{position:absolute;inset:0 auto 0 0;background:var(--acc);opacity:.9}
+.rr .t span{position:relative;padding-left:8px;line-height:26px;font-size:12.5px;color:#fff;mix-blend-mode:normal;text-shadow:0 0 3px rgba(0,0,0,.55)}
+.rr em{font-style:normal;text-align:right;font-weight:700}
+.rr.w .n{color:var(--bad)} .rr.g .n{color:var(--ok)}
+.foot{margin-top:22px;text-align:center;font-size:12.5px;color:var(--mut)}
+.foot button{background:none;border:0;color:var(--mut);text-decoration:underline;padding:4px 8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ---------- estado ---------- */
+var KEY="plantao-coluna-v1";
+var S={xp:0,wrong:[],plays:0};
+try{var raw=localStorage.getItem(KEY);if(raw){S=Object.assign(S,JSON.parse(raw));}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+var app=document.getElementById("app");
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+/* ---------- banco de conteúdo ---------- */
+var CASES=[
+{id:"c1",tag:"Objetivo 5 · conduta",v:"Marcos, 29 anos, sente dor lombar difusa desde que carregou uma mudança ontem. Piora ao movimento, melhora deitado, há contratura paravertebral, exame neurológico normal, sem febre e sem trauma maior.",q:"Qual a melhor conduta inicial?",o:["Educação e reasseguramento, manter-se ativo e AINE por curto período","Ressonância magnética urgente","Repouso no leito por 2 semanas","Opioide forte de horário"],a:0,e:"Lombalgia mecânica aguda sem red flags: imagem nas primeiras 4 a 6 semanas não melhora desfechos e gera nocebo; repouso prolongado é contraindicado porque o disco se nutre pelo movimento; opioides devem ser evitados."},
+{id:"c2",tag:"Objetivo 4 · ritmo da dor",v:"Rafael, 31 anos, tem dor lombar insidiosa há 8 meses. Rigidez matinal de 1 hora, acorda na segunda metade da noite e precisa andar, melhora com exercício, piora no repouso, tem talalgia e responde muito bem a AINE.",q:"Qual a principal hipótese?",o:["Espondiloartrite axial","Hérnia discal L4-L5","Síndrome facetária","Distensão musculoligamentar"],a:0,e:"Ritmo inflamatório completo (critérios ASAS: pelo menos 4 de 5) mais entesite. O atraso diagnóstico médio ainda é de 5 a 8 anos, justamente por não valorizar o ritmo da dor."},
+{id:"c3",tag:"Objetivo 5 · estenose",v:"Dona Lurdes, 74 anos, tem dor e peso nas duas pernas após 100 m de caminhada. Só alivia ao sentar ou inclinar o tronco. Pedala bem na bicicleta, os pulsos pediosos são normais e ela anda bem empurrando o carrinho de supermercado.",q:"O que ela tem?",o:["Claudicação neurogênica por estenose de canal","Claudicação vascular por DAOP","Síndrome do piriforme","Síndrome da cauda equina aguda"],a:0,e:"A flexão abre o canal e relaxa o ligamento amarelo pregueado. Na claudicação vascular, parar em pé já alivia, os pulsos estão reduzidos e a bicicleta é mal tolerada (teste de van Gelderen)."},
+{id:"c4",tag:"Objetivo 2 e 5 · raízes",v:"Paulo, 45 anos, com lombociatalgia. A RM mostra hérnia póstero-lateral L4-L5. Ele tem dificuldade para andar sobre os calcanhares, fraqueza do extensor do hálux e hipoestesia no dorso do pé. Reflexos preservados.",q:"Qual raiz está comprometida?",o:["L5","L4","S1","L3"],a:0,e:"A hérnia póstero-lateral comprime a raiz do nível abaixo: L4-L5 comprime L5. Dorsiflexores, hálux e dorso do pé são L5, que não tem reflexo específico."},
+{id:"c5",tag:"Objetivo 5 · emergência",v:"Ana, 38 anos, tem lombalgia com dor irradiada para as duas pernas há 2 dias. Hoje não sente a bexiga encher, perdeu a sensibilidade ao se limpar e está com fraqueza nas duas pernas.",q:"Qual a conduta?",o:["RM de urgência e descompressão cirúrgica precoce, idealmente em 24 a 48 h","AINE e retorno em 1 semana","Eletroneuromiografia ambulatorial","Fisioterapia motora"],a:0,e:"Retenção urinária, anestesia em sela e déficit bilateral definem síndrome da cauda equina. O atraso se correlaciona com sequela esfincteriana e sexual permanente."},
+{id:"c6",tag:"Objetivo 3 · escoliose",v:"Júlia, 12 anos, tem assimetria dos triângulos de talhe, sem dor. O teste de Adams mostra gibosidade torácica direita. Na radiografia em pé: Cobb 32°, Risser 1, sem menarca ainda.",q:"Qual a conduta?",o:["Colete, com o objetivo de impedir a progressão","Observar e reavaliar em 1 ano","Artrodese com instrumentação","Fisioterapia isolada, sem colete"],a:0,e:"Curva de 25 a 40° com Risser 0 a 2 tem indicação de colete. O BrAIST mostrou sucesso de 72% contra 48% da observação, com dose-resposta: acima de 12,9 h por dia, cerca de 90%. O colete não corrige; impede a progressão."},
+{id:"c7",tag:"Objetivo 3 · sinais de alarme",v:"Pedro, 14 anos, tem escoliose com Cobb de 25°, mas queixa-se de dor significativa. A curva torácica tem convexidade ESQUERDA e os reflexos cutâneo-abdominais são assimétricos.",q:"Qual o próximo passo?",o:["RM do neuroeixo","Colete imediato","Alta com orientação postural","Apenas repetir a radiografia em 6 meses"],a:0,e:"Escoliose idiopática não dói. Dor, curva torácica esquerda e achado neurológico sugerem siringomielia, Chiari ou tumor. Ressonância antes de qualquer tratamento."},
+{id:"c8",tag:"Objetivo 2 · Adams",v:"Bia, 13 anos, tem ombros e pelve aparentemente assimétricos. No teste de Adams o dorso é simétrico, sem gibosidade. Em decúbito o desvio desaparece. O membro inferior direito é 1,5 cm mais curto.",q:"Qual a interpretação?",o:["Atitude escoliótica por discrepância de membros, e não escoliose estrutural","Escoliose idiopática: iniciar colete","Escoliose congênita","Escoliose neuromuscular"],a:0,e:"Sem rotação vertebral não há gibosidade. Desvio que desaparece no decúbito e corrige com calço é atitude, não escoliose estrutural."},
+{id:"c9",tag:"Objetivo 2 · imagem e nocebo",v:"Sr. Carlos, 50 anos, tem lombalgia mecânica há 3 semanas, sem red flags. Trouxe uma RM com degeneração discal e abaulamento em L4-L5 e pergunta: “minha coluna está destruída?”",q:"Qual a melhor resposta?",o:["Esses achados são muito comuns em quem não tem dor nessa idade; a dor tende a melhorar e se movimentar é seguro","Sim, é uma degeneração avançada; evite esforços e descanse","Precisa operar para corrigir o abaulamento","Deve repetir a RM em 2 semanas"],a:0,e:"Brinjikji: aos 50 anos, 80% dos assintomáticos têm degeneração discal e 60% têm abaulamento. Linguagem catastrófica é iatrogenia verbal e piora o prognóstico."},
+{id:"c10",tag:"Objetivo 2 · Lasègue",v:"Ao elevar a perna estendida de um paciente com lombalgia, aos 45° ele refere dor na face posterior da coxa, sem irradiar abaixo do joelho.",q:"O Lasègue é positivo?",o:["Não: é tensão de isquiotibiais; positivo exige dor radicular abaixo do joelho entre 30 e 70°","Sim, qualquer dor na perna positiva o teste","Sim, indica hérnia volumosa","Não, só vale acima de 70°"],a:0,e:"Erro de interpretação muito comum. O Lasègue é sensível (cerca de 91%) e pouco específico (cerca de 26%); o cruzado é o inverso."},
+{id:"c11",tag:"Objetivo 3 · espondilólise",v:"Lucas, 15 anos, ginasta, tem dor lombar que piora na extensão. A radiografia oblíqua mostra a “coleira” no cachorro escocês em L5, e o SPECT mostra lesão ativa.",q:"Qual a conduta mais coerente?",o:["Repouso esportivo, com ou sem colete, por 8 a 12 semanas","Artrodese imediata","Manter o treino, pois é pseudoartrose antiga","Só alongamento e treino amanhã"],a:0,e:"Espondilólise é fratura por estresse da pars de L5. Lesão ativa (que capta) tem potencial de consolidação; a antiga, que não capta, é pseudoartrose."},
+{id:"c12",tag:"Objetivo 4 · causa visceral",v:"Sr. Antônio, 70 anos, hipertenso e tabagista, tem dor lombar súbita e muito intensa, sem relação com movimento. O exame da coluna é normal, há massa pulsátil abdominal e PA de 90/60.",q:"Qual o diagnóstico que não pode ser perdido?",o:["Aneurisma de aorta abdominal","Distensão muscular","Síndrome facetária","Espondiloartrite"],a:0,e:"Dor sem ritmo mecânico e com exame da coluna normal obriga a pensar em causa visceral. Aneurisma roto ou em expansão é a mais grave."},
+{id:"c13",tag:"Objetivo 4 · mecanismos de dor",v:"Marta, 52 anos, tem lombalgia há 4 anos, difusa e desproporcional, com alodínia, fadiga e sono ruim. A RM mostra alterações discais leves. Já fez várias imagens e procura cirurgia.",q:"Qual o mecanismo dominante e a abordagem?",o:["Nociplástico: exercício, educação em dor, TCC, eventualmente duloxetina","Nociceptivo puro: AINE contínuo","Neuropático puro: gabapentinoide","Fusão por dor discogênica"],a:0,e:"Dor nociplástica (sensibilização central) responde a exercício, educação em dor, TCC e duloxetina, e piora com abordagens centradas em consertar a estrutura."},
+{id:"c14",tag:"Objetivo 5 · exercício",v:"Bruno, 40 anos, tem lombalgia crônica e pergunta qual exercício é o melhor: Pilates, musculação, ioga ou natação.",q:"O que a evidência diz?",o:["Nenhuma modalidade é consistentemente superior; a melhor é a que ele consegue manter","Apenas Pilates funciona","Apenas musculação funciona","Nenhuma: ele deve repousar"],a:0,e:"O benefício depende de regularidade e adesão. O efeito preventivo (redução de 35 a 45% da recorrência) desaparece quando o exercício é interrompido."},
+{id:"c15",tag:"Objetivo 5 · farmacologia",v:"Paciente com lombalgia aguda pede apenas paracetamol porque o considera mais seguro.",q:"O que o ensaio PACE mostrou?",o:["Paracetamol não foi superior ao placebo; o AINE é a primeira escolha","Paracetamol é a primeira linha com forte evidência","Paracetamol equivale a opioide","Paracetamol cura em 48 h"],a:0,e:"As diretrizes retiraram o paracetamol isolado como primeira linha. AINE na menor dose e pelo menor tempo, com estratificação de risco GI, CV e renal."},
+{id:"c16",tag:"Objetivo 3 · prevenção quaternária",v:"Luiza, 35 anos. A radiografia mostra retificação da lordose lombar e o médico propõe 6 meses de “correção postural” como tratamento da dor.",q:"Como avaliar?",o:["Retificação é achado inespecífico, comum em assintomáticos e muitas vezes por espasmo antálgico; não é diagnóstico","A retificação é a causa e exige colete","Deve operar","Deve repousar 30 dias"],a:0,e:"Laudar a retificação como causa e tratá-la com longos programas de correção é exemplo do que a prevenção quaternária busca evitar."},
+{id:"c17",tag:"Objetivo 4 · red flag",v:"Rui, 41 anos, usuário de drogas injetáveis, tem febre e dor lombar intensa. Há dor à percussão do espinhoso e VHS e PCR elevados.",q:"Hipótese e próximo passo?",o:["Espondilodiscite ou abscesso: RM com contraste e hemoculturas","Distensão: AINE e casa","Espondiloartrite: pedir HLA-B27","Fibromialgia"],a:0,e:"Febre, uso de drogas injetáveis, dor à percussão e provas inflamatórias elevadas são red flags de infecção."},
+{id:"c18",tag:"Objetivo 5 · cirurgia (SPORT)",v:"Carla, 40 anos, tem radiculopatia S1 por hérnia L5-S1 há 8 semanas, com dor radicular incapacitante refratária ao tratamento conservador. Pergunta se deve operar.",q:"O que dizer, segundo o estudo SPORT?",o:["A discectomia alivia mais rápido, mas em 1 a 2 anos os resultados convergem com o conservador: decisão compartilhada","A cirurgia é sempre superior em 2 anos","Cirurgia nunca é indicada","Só operar se a hérnia for grande"],a:0,e:"A indicação existe (dor incapacitante refratária a 6 a 12 semanas), mas a cirurgia acelera a recuperação; a maioria melhora de qualquer forma."},
+{id:"c19",tag:"Objetivo 3 · congênita",v:"Lactente com escoliose por hemivértebra.",q:"Que investigação é obrigatória além da coluna?",o:["US renal, ecocardiograma e RM do neuroeixo","Apenas radiografias seriadas","Cintilografia óssea","Nenhuma, é benigno"],a:0,e:"As vértebras se formam entre a 4ª e a 6ª semanas, junto com coração e rins: malformações renais ocorrem em cerca de 20 a 30% e cardíacas em 10 a 25%."},
+{id:"c20",tag:"Objetivo 5 · prevenção",v:"Uma metalúrgica quer prevenir lombalgia comprando cintas lombares, palmilhas e oferecendo um curso isolado de técnica de levantamento.",q:"Qual a melhor sugestão?",o:["Programa de exercício mantido e mudanças no posto de trabalho; cintas e escola de coluna isoladas não funcionam","Cintas para todos os funcionários","Radiografia pré-admissional","Curso de técnica de levantamento isolado"],a:0,e:"Só o exercício tem evidência consistente de prevenção. Na hierarquia de controle, treinar postura está entre os níveis mais fracos."},
+{id:"c21",tag:"Objetivo 1 · Nachemson",v:"Jovem de 26 anos com dor central que piora sentado, ao fletir o tronco e ao tossir, e melhora em pé ou deitado. A RM mostra Modic tipo 1.",q:"Por que sentar dói mais do que ficar em pé?",o:["A pressão intradiscal sentado (cerca de 140 a 185%) é maior que em pé (100%), por retroversão pélvica e perda da lordose","Sentar descarrega o disco","Por atrofia isolada do multífido","Por inflamação sacroilíaca"],a:0,e:"Dor discogênica vem do terço externo do ânulo (nervo sinuvertebral) e piora nas posturas de maior pressão intradiscal."},
+{id:"c22",tag:"Objetivo 3 · Scheuermann",v:"Rafa, 14 anos, imaturo, tem cifose rígida que não corrige à hiperextensão, acunhamento de 6° em três vértebras consecutivas, nódulos de Schmorl e Cobb de 65°.",q:"Qual a conduta?",o:["Colete tipo Milwaukee: aqui há potencial real de correção","Só observar","Cirurgia imediata","Somente exercícios posturais"],a:0,e:"Em Scheuermann: exercícios abaixo de 60°, colete de 60 a 75° em imaturos (corrige, pelo remodelamento do acunhamento) e cirurgia acima de 75 a 80°."}
+];
+
+var TRI=[];
+(function(){
+var M="mec",I="inf",A="alr";
+var L=[
+["Piora com movimento e carga",M,"Ritmo mecânico: o movimento e a carga agravam, o repouso alivia."],
+["Rigidez matinal de menos de 30 minutos",M,"Rigidez breve é mecânica; inflamatória passa de 30 a 60 minutos."],
+["Dor central que piora ao sentar, fletir e tossir",M,"Dor discogênica: situações de maior pressão intradiscal (Nachemson)."],
+["Dor paravertebral que piora na extensão e na rotação",M,"Síndrome facetária: os movimentos carregam as facetas."],
+["Dor sobre a espinha ilíaca póstero-superior, com 3 ou mais manobras sacroilíacas positivas",M,"Disfunção sacroilíaca mecânica."],
+["Degrau palpável entre espinhosos e dor na extensão",M,"Espondilolistese: quadro mecânico."],
+["Dor após esforço, com contratura paravertebral e exame neurológico normal",M,"Distensão musculoligamentar, causa mais frequente de lombalgia aguda."],
+["Melhora com exercício",I,"Marca do ritmo inflamatório; na mecânica o exercício piora."],
+["Piora com o repouso",I,"Inflamatória: o repouso piora."],
+["Rigidez matinal de mais de 1 hora",I,"Rigidez prolongada (acima de 30 a 60 min) é inflamatória."],
+["Acorda na segunda metade da noite e precisa caminhar",I,"Dor noturna característica da espondiloartrite."],
+["Início insidioso antes dos 40 anos",I,"Critério ASAS (4 de 5)."],
+["Excelente resposta a AINE em 24 a 48 horas",I,"Reforça espondiloartrite axial."],
+["Dactilite (dedo em salsicha)",I,"Manifestação extra-axial de espondiloartrite."],
+["Uveíte anterior aguda recorrente",I,"Manifestação extra-axial de espondiloartrite."],
+["Talalgia por entesite de Aquiles ou fáscia plantar",I,"Entesite sugere espondiloartrite."],
+["Retenção urinária e anestesia em sela",A,"Cauda equina: emergência cirúrgica."],
+["Febre em usuário de drogas injetáveis, com dor à percussão",A,"Red flag de infecção (espondilodiscite)."],
+["Dor lombar com história de câncer e perda de peso inexplicada",A,"Red flag de neoplasia."],
+["Dor súbita após trauma leve em paciente em corticoterapia prolongada",A,"Red flag de fratura osteoporótica."],
+["Massa abdominal pulsátil com dor súbita e intensa no idoso",A,"Aneurisma de aorta abdominal."],
+["Dor noturna progressiva que não melhora com repouso, há mais de 1 mês",A,"Red flag de neoplasia."],
+["Fraqueza bilateral progressiva dos membros inferiores com arreflexia",A,"Déficit neurológico grave ou cauda equina."],
+["Dor lombar sem relação com movimento ou postura e com exame da coluna normal",A,"Pensar em causa visceral."]
+];
+L.forEach(function(x,i){TRI.push({id:"t"+i,tag:"Triagem diagnóstica",q:x[0],o:["Mecânica","Inflamatória","Alarme (causa específica)"],a:[M,I,A].indexOf(x[1]),e:x[2],fixed:true,row:true,timed:true});});
+})();
+
+var MYTH=[];
+(function(){
+var L=[
+["Repouso no leito por 1 a 2 semanas acelera a recuperação da lombalgia aguda.",0,"O repouso degrada o disco (nutrido pelo movimento), atrofia o multífido e reforça a cinesiofobia. No máximo 1 a 2 dias na crise muito intensa."],
+["O disco é a maior estrutura avascular do corpo e se nutre por difusão estimulada pela alternância de carga e descarga.",1,"Daí o movimento ser terapia e o tabagismo ser agravante."],
+["Sentado ereto, a pressão no disco é maior do que em pé.",1,"Cerca de 140% contra 100% (Nachemson), por retroversão pélvica e redução da lordose."],
+["Cada segmento lombar permite cerca de 2° de rotação, e por isso flexão com torção e carga é mecanismo clássico de hérnia.",1,"As facetas lombares sagitais bloqueiam a rotação; o disco absorve a torção."],
+["Degeneração discal na imagem prova que o disco é a causa da dor.",0,"Aos 50 anos, 80% dos assintomáticos têm degeneração discal (Brinjikji). A correlação com a clínica é obrigatória."],
+["O colete na escoliose idiopática corrige a curva.",0,"O colete impede a progressão até o fim do crescimento; não corrige."],
+["A escoliose idiopática do adolescente costuma ser dolorosa.",0,"É tipicamente indolor. Dor significativa exige excluir tumor, infecção, siringomielia e Chiari."],
+["Paracetamol isolado é primeira linha na lombalgia aguda.",0,"O ensaio PACE não mostrou superioridade ao placebo."],
+["A herdabilidade da degeneração discal (30 a 70%) supera o efeito da carga ocupacional.",1,"Contraria a crença de que degeneração é desgaste pelo uso."],
+["Cintas lombares previnem lombalgia.",0,"Sem evidência de prevenção; geram falsa segurança. Aprender a ativar o core é mais eficaz."],
+["O exercício é a única intervenção com evidência consistente de prevenir recidivas, com redução de 35 a 45% do risco.",1,"O efeito desaparece quando o exercício é interrompido."],
+["A hérnia póstero-lateral é a mais comum porque o ligamento longitudinal posterior é estreito nas lombares.",1,"O ligamento reforça o centro e deixa as laterais, por onde passam as raízes, desprotegidas."],
+["Sinais de Waddell provam simulação.",0,"Indicam sofrimento psicológico e risco de cronificação (yellow flags), nunca fraude."],
+["Uma coluna com as três curvaturas móveis resiste cerca de 10 vezes mais que uma retificada (Delmas: R = N² + 1).",1,"Com N = 3, R = 10. Por isso a retificação reduz a absorção de carga."],
+["O Lasègue tem alta sensibilidade e baixa especificidade; o Lasègue cruzado, o inverso.",1,"Lasègue: cerca de 91% e 26%. Cruzado: cerca de 29% e 88%."],
+["Gabapentinoides são recomendados na lombalgia e na ciática.",0,"Os ensaios na ciática foram negativos, com mais efeitos adversos."],
+["A lombalgia é a principal causa de anos vividos com incapacidade no mundo.",1,"Posição que ocupa desde 1990 no Global Burden of Disease."],
+["A maioria das lombalgias (mais de 85%) é inespecífica, sem causa estrutural identificável.",1,"Inespecífica significa honestidade diagnóstica, não ausência de causa."],
+["A articulação atlantoaxial (C1-C2) responde por cerca de 50% da rotação cervical.",1,"O “não” ocorre em C1-C2; o “sim”, na atlanto-occipital."],
+["Pedir ressonância de rotina nas primeiras 4 a 6 semanas melhora os desfechos na lombalgia sem red flags.",0,"Não melhora e associa-se a mais intervenções e pior resultado, pelo efeito nocebo."],
+["Opioides fortes são recomendados na lombalgia crônica.",0,"Benefício modesto e risco de dependência, hiperalgesia e quedas: evitar."],
+["A infiltração epidural de corticoide reduz a necessidade de cirurgia a longo prazo.",0,"Dá alívio de curto prazo na radiculopatia, sem mudar desfechos de longo prazo."],
+["O núcleo pulposo é insensível; a dor discogênica surge quando as fissuras alcançam o terço externo do ânulo.",1,"Inervação pelo nervo sinuvertebral, que também supre o ligamento longitudinal posterior."]
+];
+L.forEach(function(x,i){MYTH.push({id:"m"+i,tag:"Mito ou evidência",q:x[0],o:["Evidência","Mito"],a:x[1]===1?0:1,e:x[2],fixed:true,row:true});});
+})();
+
+var ROOT=[];
+(function(){
+var R=["L3","L4","L5","S1"];
+var L=[
+["Hérnia póstero-lateral L3-L4","L4","A póstero-lateral comprime a raiz do nível abaixo: L3-L4 comprime L4."],
+["Hérnia póstero-lateral L4-L5 (a mais comum)","L5","L4-L5 comprime L5."],
+["Hérnia póstero-lateral L5-S1","S1","L5-S1 comprime S1."],
+["Hérnia FORAMINAL L4-L5","L4","A foraminal ou extraforaminal comprime a raiz que sai naquele mesmo nível: L4-L5 foraminal comprime L4."],
+["Hérnia FORAMINAL L5-S1","L5","Foraminal L5-S1 comprime L5, que sai por esse forame."],
+["Hérnia FORAMINAL L3-L4","L3","Foraminal L3-L4 comprime L3."],
+["Aquileu abolido e dificuldade de andar nas pontas dos pés","S1","S1: flexores plantares (gastrocnêmio e sóleo) e reflexo aquileu."],
+["Patelar reduzido, fraqueza do quadríceps e dor até o maléolo medial","L4","L4: patelar, quadríceps, face medial da perna."],
+["Fraqueza do extensor do hálux, Trendelenburg e dor no dorso do pé, sem alteração de reflexo","L5","L5: dorsiflexores, hálux e glúteo médio; não tem reflexo específico."],
+["Dor na borda lateral do pé e no calcâneo, com fraqueza dos flexores plantares","S1","S1: borda lateral do pé e calcâneo."],
+["Dificuldade de agachar e levantar, com patelar reduzido","L4","Agachar testa quadríceps (L3-L4); o patelar é o reflexo de L4."],
+["Dor na face lateral da perna e dificuldade de andar sobre os calcanhares","L5","Andar nos calcanhares testa L5 e L4 (dorsiflexores)."]
+];
+L.forEach(function(x,i){ROOT.push({id:"r"+i,tag:"Qual raiz?",q:x[0],o:R,a:R.indexOf(x[1]),e:x[2],fixed:true,row:true});});
+})();
+
+var ALL={};
+[CASES,TRI,MYTH,ROOT].forEach(function(p){p.forEach(function(q){ALL[q.id]=q;});});
+
+var POST=[
+{n:"Deitado em decúbito dorsal",p:25},
+{n:"Decúbito lateral",p:75},
+{n:"Em pé, ereto",p:100},
+{n:"Sentado, ereto",p:140},
+{n:"Em pé, fletido à frente",p:150},
+{n:"Sentado, inclinado à frente",p:185},
+{n:"Fletido à frente com peso nas mãos",p:250}
+];
+
+/* ---------- níveis ---------- */
+var LV=[[0,"Calouro"],[120,"Interno"],[300,"R1 de Ortopedia"],[520,"R2 de Reumatologia"],[800,"Preceptor"],[1100,"Mestre da Coluna"]];
+function level(){var l=0;for(var i=0;i<LV.length;i++){if(S.xp>=LV[i][0])l=i;}var next=LV[l+1];var cur=LV[l][0];return {i:l,name:LV[l][1],pct:next?Math.round((S.xp-cur)/(next[0]-cur)*100):100,next:next?next[0]:null};}
+
+/* ---------- coluna que acende com o XP ---------- */
+function spineSVG(){
+  var lit=Math.min(24,Math.floor(S.xp/45));
+  var s='<svg viewBox="0 0 96 330" width="96" height="330" role="img" aria-label="Coluna com '+lit+' de 24 vértebras acesas">';
+  for(var i=0;i<24;i++){
+    var t=i/23, x, w, h;
+    if(i<7){x=-6*Math.sin(Math.PI*i/6);w=24+i*0.4;}
+    else if(i<19){var k=(i-7)/11;x=7*Math.sin(Math.PI*k);w=28+k*6;}
+    else{var k2=(i-19)/4;x=-8*Math.sin(Math.PI*k2);w=38+k2*2;}
+    h=10;
+    var y=6+i*13.3;
+    var cx=46+x;
+    var on=i<lit;
+    s+='<rect x="'+(cx-w/2)+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="4" fill="'+(on?'var(--acc)':'var(--bone)')+'" stroke="'+(on?'var(--acc)':'var(--bone-d)')+'" stroke-width="1" opacity="'+(on?1:.75)+'"/>';
+    if(i<23){s+='<rect x="'+(cx-w/2+5)+'" y="'+(y+h)+'" width="'+(w-10)+'" height="3.3" rx="1.6" fill="var(--line)"/>';}
+  }
+  return s+'</svg>';
+}
+
+/* ---------- home ---------- */
+function home(){
+  clearT();
+  var lv=level();
+  var nw=S.wrong.filter(function(id){return ALL[id];}).length;
+  app.innerHTML=
+  '<div class="hero"><div class="spine">'+spineSVG()+'</div><div>'+
+  '<h1>Plantão da Coluna</h1><p>Anatomia, exame, desvios e lombalgias do guia de tutoria, em casos e duelos rápidos.</p>'+
+  '<div class="lvl"><b>'+lv.name+'</b><br>'+S.xp+' XP'+(lv.next?' · próximo nível em '+lv.next+' XP':' · nível máximo')+'<div class="bar"><i style="width:'+lv.pct+'%"></i></div></div>'+
+  '<p style="margin-top:8px">Cada 45 XP acende uma vértebra.</p></div></div>'+
+  '<div class="modes">'+
+  modeBtn("plantao","🩺","Plantão da Coluna","8 casos clínicos: decida a conduta")+
+  modeBtn("tri","⚡","Triagem Relâmpago","Mecânica, inflamatória ou alarme? 9 segundos por cartão")+
+  modeBtn("root","🧭","Detetive de Raiz","Hérnia póstero-lateral ou foraminal: qual raiz sofre?")+
+  modeBtn("myth","🔍","Mito ou Evidência","Frases do guia: verdadeiras ou armadilhas?")+
+  modeBtn("order","📊","Ordene a Carga","Posturas do mais leve ao mais pesado para o disco")+
+  '<button class="mode rev" data-m="rev"><div class="ic">🔁</div><div><b>Revisar meus erros</b><span>'+(nw?'Volte aos itens que você errou':'Nenhum erro pendente por enquanto')+'</span></div>'+(nw?'<small>'+nw+'</small>':'')+'</button>'+
+  '</div><div class="foot"><button id="th">Alternar tema claro e escuro</button></div>';
+  app.querySelectorAll("[data-m]").forEach(function(b){b.onclick=function(){start(b.getAttribute("data-m"));};});
+  document.getElementById("th").onclick=function(){var r=document.documentElement;var dark=(r.getAttribute("data-theme")==="dark")||(!r.getAttribute("data-theme")&&window.matchMedia("(prefers-color-scheme: dark)").matches);r.setAttribute("data-theme",dark?"light":"dark");};
+}
+function modeBtn(k,ic,t,d){return '<button class="mode" data-m="'+k+'"><div class="ic">'+ic+'</div><div><b>'+t+'</b><span>'+d+'</span></div></button>';}
+
+/* ---------- motor de perguntas ---------- */
+var G=null,TM=null;
+function clearT(){if(TM){clearInterval(TM);TM=null;}}
+function start(m){
+  if(m==="order"){return order();}
+  var items;
+  if(m==="plantao")items=shuffle(CASES).slice(0,8);
+  else if(m==="tri")items=shuffle(TRI).slice(0,12);
+  else if(m==="root")items=shuffle(ROOT).slice(0,8);
+  else if(m==="myth")items=shuffle(MYTH).slice(0,10);
+  else{items=shuffle(S.wrong.filter(function(id){return ALL[id];})).slice(0,10).map(function(id){return ALL[id];});}
+  if(!items.length){home();return;}
+  G={m:m,items:items,i:0,ok:0,streak:0,best:0,xp:0,locked:false};
+  showQ();
+}
+function showQ(){
+  clearT();
+  var q=G.items[G.i];
+  var idx=q.o.map(function(_,k){return k;});
+  if(!q.fixed)idx=shuffle(idx);
+  G.idx=idx;G.locked=false;
+  var h='<div class="top"><button class="back" id="bk" aria-label="Voltar ao menu">Menu</button><div class="bar"><i style="width:'+Math.round(G.i/G.items.length*100)+'%"></i></div><div class="streak">'+(G.streak>1?'🔥 '+G.streak:(G.i+1)+'/'+G.items.length)+'</div></div>';
+  if(q.timed)h+='<div class="timer"><i id="tb"></i></div>';
+  h+='<div class="qcard'+(q.timed?' tri':'')+'"><span class="tag">'+q.tag+'</span>';
+  if(q.v)h+='<p class="vig">'+q.v+'</p>';
+  h+='<p class="q">'+q.q+'</p><div class="opts'+(q.row?' row':'')+'" id="os">';
+  idx.forEach(function(k){h+='<button class="opt" data-k="'+k+'">'+q.o[k]+'</button>';});
+  h+='</div><div id="fb"></div></div>';
+  app.innerHTML=h;
+  document.getElementById("bk").onclick=function(){if(G.i>0&&!confirm("Sair da partida? O XP desta rodada já ganho fica salvo."))return;finishXP();home();};
+  app.querySelectorAll(".opt").forEach(function(b){b.onclick=function(){answer(parseInt(b.getAttribute("data-k"),10));};});
+  if(q.timed){var t0=Date.now(),T=9000,tb=document.getElementById("tb");TM=setInterval(function(){var r=1-(Date.now()-t0)/T;if(r<=0){clearT();answer(-1);}else tb.style.width=(r*100)+"%";},80);}
+}
+function answer(k){
+  if(G.locked)return;G.locked=true;clearT();
+  var q=G.items[G.i];var ok=(k===q.a);
+  app.querySelectorAll(".opt").forEach(function(b){var bk=parseInt(b.getAttribute("data-k"),10);b.disabled=true;if(bk===q.a)b.classList.add("ok");else if(bk===k)b.classList.add("bad");});
+  var gain=0;
+  if(ok){G.ok++;G.streak++;if(G.streak>G.best)G.best=G.streak;gain=10+Math.min(G.streak,5)*2;G.xp+=gain;S.wrong=S.wrong.filter(function(x){return x!==q.id;});}
+  else{G.streak=0;if(S.wrong.indexOf(q.id)<0)S.wrong.push(q.id);}
+  save();
+  var last=G.i===G.items.length-1;
+  var head=ok?"Correto, +"+gain+" XP":(k===-1?"Tempo esgotado":"Não foi dessa vez");
+  document.getElementById("fb").innerHTML='<div class="fb '+(ok?'ok':'bad')+'"><b>'+head+'</b>'+q.e+'</div><button class="cta" id="nx">'+(last?"Ver resultado":"Próxima")+'</button>';
+  document.getElementById("nx").onclick=function(){if(last)endScreen();else{G.i++;showQ();}};
+  document.getElementById("nx").focus();
+}
+function finishXP(){if(G&&G.xp){S.xp+=G.xp;G.xp=0;save();}}
+function endScreen(){
+  var pct=Math.round(G.ok/G.items.length*100);
+  var st=pct>=85?"⭐⭐⭐":pct>=60?"⭐⭐":pct>=30?"⭐":"·";
+  var msg=pct>=85?"Raciocínio de plantonista.":pct>=60?"Bom caminho; revise os itens errados.":"Os erros ficaram guardados para você revisar.";
+  var gained=G.xp;S.xp+=G.xp;G.xp=0;S.plays++;save();
+  var lv=level();
+  app.innerHTML='<div class="qcard end"><div class="stars">'+st+'</div><h2>'+G.ok+' de '+G.items.length+'</h2><p style="color:var(--mut);margin:0">'+msg+'</p>'+
+  '<p style="margin:14px 0 0">+'+gained+' XP · maior sequência '+G.best+'</p><p style="margin:2px 0 0;color:var(--mut)">'+lv.name+' · '+S.xp+' XP</p>'+
+  '<button class="cta" id="ag">Jogar de novo</button><button class="cta alt" id="hm">Voltar ao menu</button></div>';
+  var m=G.m;
+  document.getElementById("ag").onclick=function(){start(m==="rev"&&!S.wrong.length?"plantao":m);};
+  document.getElementById("hm").onclick=home;
+}
+
+/* ---------- Ordene a carga ---------- */
+function order(){
+  clearT();
+  var set=shuffle(POST).slice(0,5);
+  var picks=[];
+  function draw(done){
+    var h='<div class="top"><button class="back" id="bk">Menu</button><div class="bar"><i style="width:'+(picks.length/5*100)+'%"></i></div><div class="streak">'+picks.length+'/5</div></div>';
+    h+='<div class="qcard"><span class="tag">Biomecânica · Nachemson</span><p class="q">Toque do que menos pressiona o disco L3 ao que mais pressiona.</p>';
+    if(!done){
+      h+='<div class="chips">';
+      set.forEach(function(p,i){var pos=picks.indexOf(i);h+='<button class="chip'+(pos>-1?' p':'')+'" data-i="'+i+'"><span class="n">'+(pos>-1?pos+1:'')+'</span>'+p.n+'</button>';});
+      h+='</div>';
+      if(picks.length)h+='<button class="cta alt" id="un">Desfazer último toque</button>';
+    }else{
+      var sorted=set.map(function(p,i){return i;}).sort(function(a,b){return set[a].p-set[b].p;});
+      var right=0;
+      h+='<div class="res">';
+      sorted.forEach(function(si,pos){var good=picks[pos]===si;if(good)right++;
+        h+='<div class="rr '+(good?'g':'w')+'"><span class="n">'+(good?'✓':'✗')+'</span><div class="t"><i style="width:'+Math.min(100,set[si].p/275*100)+'%"></i><span>'+set[si].n+'</span></div><em>'+set[si].p+'%</em></div>';});
+      h+='</div>';
+      var gain=right*8;S.xp+=gain;S.plays++;save();
+      h+='<div class="fb '+(right>=4?'ok':'bad')+'"><b>'+right+' de 5 na posição certa, +'+gain+' XP</b>Referência: em pé = 100%. Sentar sobrecarrega mais que ficar em pé (retroversão pélvica e perda da lordose), a pior combinação é flexão com carga, e o decúbito é a única descarga real. Por isso repouso breve na crise aguda, mas nunca prolongado.</div>';
+      h+='<button class="cta" id="ag">Nova rodada</button><button class="cta alt" id="hm">Voltar ao menu</button>';
+    }
+    h+='</div>';
+    app.innerHTML=h;
+    document.getElementById("bk").onclick=home;
+    if(!done){
+      app.querySelectorAll(".chip").forEach(function(c){c.onclick=function(){var i=parseInt(c.getAttribute("data-i"),10);if(picks.indexOf(i)>-1)return;picks.push(i);draw(picks.length===5);};});
+      var un=document.getElementById("un");if(un)un.onclick=function(){picks.pop();draw(false);};
+    }else{document.getElementById("ag").onclick=order;document.getElementById("hm").onclick=home;}
+  }
+  draw(false);
+}
+
+home();
+</script>
+</body>
+</html>
